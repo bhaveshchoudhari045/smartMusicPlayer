@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NOVA Music Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Animated background -->
+      <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+      <canvas id="bgCanvas"></canvas>
+
+      <!-- Sidebar Nav -->
+      <nav class="sidebar">
+        <div class="logo">NOVA</div>
+        <div class="nav-items">
+          <button class="nav-btn active" data-view="player" title="Player">
+            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" /></svg>
+          </button>
+          <button class="nav-btn" data-view="library" title="Library">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+          </button>
+          <button class="nav-btn" data-view="playlists" title="Playlists">
+            <svg viewBox="0 0 24 24">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="15" y2="12" />
+              <line x1="3" y1="18" x2="18" y2="18" />
+              <circle cx="20" cy="16" r="3" />
+            </svg>
+          </button>
+          <button class="nav-btn" data-view="insights" title="Insights">
+            <svg viewBox="0 0 24 24">
+              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+            </svg>
+          </button>
+          <button class="nav-btn" data-view="mood" title="Mood">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8,14s1.5,2,4,2,4-2,4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Main Views -->
+      <main class="main-content">
+        <!-- ===== PLAYER VIEW ===== -->
+        <section class="view active" id="view-player">
+          <div class="player-layout">
+            <!-- Visualizer + Album Art -->
+            <div class="viz-zone">
+              <canvas id="visualizer"></canvas>
+              <div class="album-art" id="albumArt">
+                <div class="album-default">
+                  <div class="vinyl">
+                    <div class="vinyl-inner"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="beat-rings" id="beatRings">
+                <div class="ring r1"></div>
+                <div class="ring r2"></div>
+                <div class="ring r3"></div>
+              </div>
+            </div>
+
+            <!-- Song Info -->
+            <div class="song-info">
+              <div class="mood-badge" id="moodBadge">
+                <span class="mood-emoji" id="moodEmoji">🎵</span>
+                <span class="mood-label" id="moodLabel">Detecting...</span>
+              </div>
+              <h1 class="song-title" id="songTitle">No Song Playing</h1>
+              <p class="song-artist" id="songArtist">
+                Select a folder to begin
+              </p>
+              <p class="song-album" id="songAlbum"></p>
+
+              <!-- Waveform Progress -->
+              <div class="progress-wrap" id="progressWrap">
+                <canvas id="waveformCanvas" class="waveform-canvas"></canvas>
+                <div class="progress-time">
+                  <span id="currentTime">0:00</span>
+                  <span id="totalTime">0:00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-zone">
+              <div class="control-row secondary">
+                <button class="ctrl-btn" id="shuffleBtn" title="Smart Shuffle">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="16,3 21,3 21,8" />
+                    <line x1="4" y1="20" x2="21" y2="3" />
+                    <polyline points="21,16 21,21 16,21" />
+                    <line x1="4" y1="4" x2="9" y2="9" />
+                  </svg>
+                  <span>Smart</span>
+                </button>
+                <button class="ctrl-btn" id="repeatBtn" title="Repeat">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="17,1 21,5 17,9" />
+                    <path d="M3,11V9a4,4,0,0,1,4-4h14" />
+                    <polyline points="7,23 3,19 7,15" />
+                    <path d="M21,13v2a4,4,0,0,1-4,4H3" />
+                  </svg>
+                  <span>Repeat</span>
+                </button>
+
+                <button class="ctrl-btn" id="heartBtn" title="Favorite">
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      d="M20.84,4.61a5.5,5.5,0,0,0-7.78,0L12,5.67l-1.06-1.06a5.5,5.5,0,0,0-7.78,7.78l1.06,1.06L12,21.23l7.78-7.78,1.06-1.06A5.5,5.5,0,0,0,20.84,4.61Z"
+                    />
+                  </svg>
+                  <span>Like</span>
+                </button>
+                <button
+                  class="ctrl-btn"
+                  id="addToPlaylistBtn"
+                  title="Add to Playlist"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Add</span>
+                </button>
+              </div>
+
+              <div class="control-row main">
+                <button class="ctrl-btn-main" id="prevBtn">
+                  <svg viewBox="0 0 24 24">
+                    <polygon points="19,20 9,12 19,4" />
+                    <line x1="5" y1="19" x2="5" y2="5" />
+                  </svg>
+                </button>
+                <button class="ctrl-btn-play" id="playBtn">
+                  <div class="play-icon" id="playIcon">
+                    <svg class="icon-play" viewBox="0 0 24 24">
+                      <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                    <svg
+                      class="icon-pause"
+                      viewBox="0 0 24 24"
+                      style="display: none"
+                    >
+                      <rect x="6" y="4" width="4" height="16" />
+                      <rect x="14" y="4" width="4" height="16" />
+                    </svg>
+                  </div>
+                  <div class="play-ripple"></div>
+                </button>
+                <button class="ctrl-btn-main" id="nextBtn">
+                  <svg viewBox="0 0 24 24">
+                    <polygon points="5,4 15,12 5,20" />
+                    <line x1="19" y1="5" x2="19" y2="19" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Volume -->
+              <div class="volume-row">
+                <svg viewBox="0 0 24 24" class="vol-icon">
+                  <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+                  <path
+                    id="vol-waves"
+                    d="M15.54,8.46a5,5,0,0,1,0,7.07M19.07,4.93a10,10,0,0,1,0,14.14"
+                  />
+                </svg>
+                <div class="vol-slider-wrap">
+                  <input
+                    type="range"
+                    id="volumeSlider"
+                    min="0"
+                    max="100"
+                    value="75"
+                  />
+                  <div class="vol-fill" id="volFill" style="width: 75%"></div>
+                </div>
+                <span id="volValue">75</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== LIBRARY VIEW ===== -->
+        <section class="view" id="view-library">
+          <div class="view-header">
+            <h2>Library</h2>
+            <div class="header-actions">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search songs..."
+                class="search-input"
+              />
+              <button class="action-btn primary" id="selectFolderBtn">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z"
+                  />
+                </svg>
+                Load Folder
+              </button>
+            </div>
+          </div>
+          <div class="sort-bar">
+            <button class="sort-btn active" data-sort="default">Default</button>
+            <button class="sort-btn" data-sort="title">Title</button>
+            <button class="sort-btn" data-sort="artist">Artist</button>
+            <button class="sort-btn" data-sort="plays">Most Played</button>
+            <button class="sort-btn" data-sort="loved">Loved</button>
+          </div>
+          <div id="songList" class="song-list">
+            <div class="empty-state">
+              <div class="empty-icon">🎵</div>
+              <p>No songs loaded. Select a folder!</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PLAYLISTS VIEW ===== -->
+        <section class="view" id="view-playlists">
+          <div class="view-header">
+            <h2>Playlists</h2>
+            <button class="action-btn primary" id="newPlaylistBtn">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New Playlist
+            </button>
+          </div>
+          <div id="playlistGrid" class="playlist-grid">
+            <div class="empty-state">
+              <div class="empty-icon">🎼</div>
+              <p>No playlists yet. Create one!</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== INSIGHTS VIEW ===== -->
+        <section class="view" id="view-insights">
+          <div class="view-header"><h2>Your Listening Insights</h2></div>
+          <div class="insights-grid">
+            <div class="insight-card card-featured">
+              <div class="card-label">🏆 All-Time Favorite</div>
+              <div class="card-value" id="insightFavorite">—</div>
+              <div class="card-sub" id="insightFavoritePlays">0 plays</div>
+            </div>
+            <div class="insight-card">
+              <div class="card-label">📻 Total Songs</div>
+              <div class="card-value" id="insightTotal">0</div>
+            </div>
+            <div class="insight-card">
+              <div class="card-label">⏱️ Total Listening</div>
+              <div class="card-value" id="insightTime">0h 0m</div>
+            </div>
+            <div class="insight-card">
+              <div class="card-label">🔥 On Fire</div>
+              <div class="card-value" id="insightStreak">—</div>
+              <div class="card-sub" id="insightStreakSub">
+                Most played this week
+              </div>
+            </div>
+          </div>
+          <div class="insights-lists">
+            <div class="insight-list-section">
+              <h3>🎯 Top 5 Most Played</h3>
+              <div id="topPlayedList" class="insight-list"></div>
+            </div>
+            <div class="insight-list-section">
+              <h3>💤 Rarely Played</h3>
+              <div id="rarePlayedList" class="insight-list"></div>
+            </div>
+            <div class="insight-list-section">
+              <h3>❤️ Most Loved</h3>
+              <div id="lovedList" class="insight-list"></div>
+            </div>
+          </div>
+          <div class="mood-history-section">
+            <h3>🌈 Mood History (last 10 sessions)</h3>
+            <div id="moodHistory" class="mood-history"></div>
+          </div>
+        </section>
+
+        <!-- ===== MOOD VIEW ===== -->
+        <section class="view" id="view-mood">
+          <div class="view-header"><h2>Mood Player</h2></div>
+          <div class="mood-grid">
+            <button class="mood-card" data-mood="energetic">
+              <div class="mood-card-emoji">⚡</div>
+              <div class="mood-card-name">Energetic</div>
+              <div class="mood-card-count" id="mood-count-energetic">
+                0 songs
+              </div>
+            </button>
+            <button class="mood-card" data-mood="happy">
+              <div class="mood-card-emoji">😊</div>
+              <div class="mood-card-name">Happy</div>
+              <div class="mood-card-count" id="mood-count-happy">0 songs</div>
+            </button>
+            <button class="mood-card" data-mood="focus">
+              <div class="mood-card-emoji">🎯</div>
+              <div class="mood-card-name">Focus</div>
+              <div class="mood-card-count" id="mood-count-focus">0 songs</div>
+            </button>
+            <button class="mood-card" data-mood="calm">
+              <div class="mood-card-emoji">🌊</div>
+              <div class="mood-card-name">Calm</div>
+              <div class="mood-card-count" id="mood-count-calm">0 songs</div>
+            </button>
+            <button class="mood-card" data-mood="romantic">
+              <div class="mood-card-emoji">💕</div>
+              <div class="mood-card-name">Romantic</div>
+              <div class="mood-card-count" id="mood-count-romantic">
+                0 songs
+              </div>
+            </button>
+            <button class="mood-card" data-mood="melancholic">
+              <div class="mood-card-emoji">🌙</div>
+              <div class="mood-card-name">Melancholic</div>
+              <div class="mood-card-count" id="mood-count-melancholic">
+                0 songs
+              </div>
+            </button>
+          </div>
+          <div
+            id="moodSongList"
+            class="song-list"
+            style="margin-top: 20px; display: none"
+          >
+            <div class="mood-filter-header">
+              <span id="activeMoodLabel"></span>
+              <button class="action-btn" id="playMoodBtn">Play All</button>
+            </div>
+            <div id="moodFilteredSongs"></div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Queue Sidebar -->
+      <aside class="queue-sidebar" id="queueSidebar">
+        <div class="queue-header">
+          <h3>Up Next</h3>
+          <button class="queue-close" id="queueClose">✕</button>
+        </div>
+        <div id="queueList" class="queue-list"></div>
+      </aside>
+      <button class="queue-toggle" id="queueToggle" title="Queue">
+        <svg viewBox="0 0 24 24">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
+      <!-- Modals -->
+      <div class="modal-overlay" id="modalOverlay">
+        <!-- New Playlist Modal -->
+        <div class="modal" id="playlistModal">
+          <h3>Create Playlist</h3>
+          <input
+            type="text"
+            id="playlistNameInput"
+            placeholder="Playlist name..."
+            class="modal-input"
+          />
+          <div class="modal-emoji-picker" id="emojiPicker">
+            🎵 🎸 🎹 🥁 🎤 🎷 🎻 🎺 🎼 🔥 💎 🌊 ⚡ 🌙 💕 🎯 🚀 🌈
+          </div>
+          <div class="modal-actions">
+            <button class="action-btn" id="cancelPlaylistBtn">Cancel</button>
+            <button class="action-btn primary" id="createPlaylistBtn">
+              Create
+            </button>
+          </div>
+        </div>
+        <!-- Add to Playlist Modal -->
+        <div class="modal" id="addToPlaylistModal" style="display: none">
+          <h3>Add to Playlist</h3>
+          <div id="playlistSelectList" class="playlist-select-list"></div>
+          <div class="modal-actions">
+            <button class="action-btn" id="cancelAddBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast notifications -->
+      <div id="toastContainer" class="toast-container"></div>
+
+      <!-- Hidden audio -->
+      <audio id="audioPlayer" crossorigin="anonymous"></audio>
+    </div>
+
+    <script src="helpers.js"></script>
+    <script src="smart-shuffle.js"></script>
+    <script src="mood-system.js"></script>
+    <script src="player-engine.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="ui-controller.js"></script>
+    <script src="app.js"></script>
+    <script src="handleHandler.js"></script>
+  </body>
+</html>

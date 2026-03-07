@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "NOVA Music Player",
+  "version": "2.0.0",
+  "description": "Intelligent music player with smart shuffle, mood detection, beat-sync visuals, and deep listening analytics",
+  "permissions": ["storage", "alarms"],
+  "action": {
+    "default_title": "NOVA Music Player",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["player.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
