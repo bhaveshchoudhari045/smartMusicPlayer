@@ -11,10 +11,31 @@ class UIController {
     this.searchQuery = "";
     this.currentView = "player";
 
+    // Theme
+    this.themePresets = {
+      purple: { accent: "#a78bfa", r: 167, g: 139, b: 250, accent2: "#f472b6" },
+      blue: { accent: "#60a5fa", r: 96, g: 165, b: 250, accent2: "#818cf8" },
+      green: { accent: "#34d399", r: 52, g: 211, b: 153, accent2: "#6ee7b7" },
+      orange: { accent: "#fb923c", r: 251, g: 146, b: 60, accent2: "#fbbf24" },
+      pink: { accent: "#f472b6", r: 244, g: 114, b: 182, accent2: "#e879f9" },
+      red: { accent: "#f87171", r: 248, g: 113, b: 113, accent2: "#fb923c" },
+      cyan: { accent: "#22d3ee", r: 34, g: 211, b: 238, accent2: "#60a5fa" },
+      yellow: { accent: "#fbbf24", r: 251, g: 191, b: 36, accent2: "#fb923c" },
+    };
+    this.currentTheme = "purple";
+    this.themeAutoCycle = false;
+    this._autoCycleTimer = null;
+    this._themeKeys = Object.keys(this.themePresets);
+    this._themeIdx = 0;
+
+    // Manual mood pins: songId -> moodKey (persistent)
+    this.moodPins = {};
+
     this._loadFromStorage();
     this._restoreFolder();
     this._bindEvents();
     this._setupMoodCallbacks();
+    this._applyTheme(this.currentTheme, false); // no animation on first load
     this._updateInsights();
   }
 
@@ -31,6 +52,18 @@ class UIController {
 
       if (data.songMoods) {
         this.mood.songMoods = data.songMoods;
+      }
+
+      if (data.moodPins) {
+        this.moodPins = data.moodPins;
+      }
+
+      if (data.theme) {
+        this.currentTheme = data.theme;
+      }
+
+      if (typeof data.themeAutoCycle === "boolean") {
+        this.themeAutoCycle = data.themeAutoCycle;
       }
 
       this.savedPlayerState = data.playerState || null;
@@ -60,6 +93,9 @@ class UIController {
           playlists: this.playlists,
           shuffleWeights: this.player.shuffle.weights,
           songMoods: this.mood.songMoods,
+          moodPins: this.moodPins,
+          theme: this.currentTheme,
+          themeAutoCycle: this.themeAutoCycle,
         }),
       );
     } catch (e) {}
@@ -270,6 +306,125 @@ class UIController {
     this.player.audio.addEventListener("timeupdate", () => {
       this._saveToStorage();
     });
+
+    // ===== THEME PANEL =====
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const themePanel = document.getElementById("themePanel");
+    const themePanelClose = document.getElementById("themePanelClose");
+
+    themeToggleBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      themePanel.classList.toggle("open");
+    });
+    themePanelClose?.addEventListener("click", () =>
+      themePanel.classList.remove("open"),
+    );
+    document.addEventListener("click", (e) => {
+      if (!themePanel?.contains(e.target) && e.target !== themeToggleBtn) {
+        themePanel?.classList.remove("open");
+      }
+    });
+
+    // Preset buttons
+    document.querySelectorAll(".theme-preset").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const theme = btn.dataset.theme;
+        this._applyTheme(theme);
+        document
+          .querySelectorAll(".theme-preset")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        this._toast("🎨 Theme changed!");
+      });
+    });
+
+    // Custom color picker
+    const colorPicker = document.getElementById("themeColorPicker");
+    colorPicker?.addEventListener("input", (e) => {
+      this._applyCustomColor(e.target.value);
+      document
+        .querySelectorAll(".theme-preset")
+        .forEach((b) => b.classList.remove("active"));
+    });
+
+    // Auto-cycle toggle
+    const autoToggle = document.getElementById("themeAutoToggle");
+    if (autoToggle) {
+      autoToggle.checked = this.themeAutoCycle;
+      autoToggle.addEventListener("change", () => {
+        this.themeAutoCycle = autoToggle.checked;
+        this._saveToStorage();
+        if (this.themeAutoCycle) {
+          this._startAutoCycle();
+          this._toast("🌈 Auto theme cycle ON");
+        } else {
+          this._stopAutoCycle();
+          this._toast("🎨 Auto theme cycle OFF");
+        }
+      });
+      if (this.themeAutoCycle) this._startAutoCycle();
+    }
+
+    // ===== MOOD DROPDOWN (click the badge itself to open) =====
+    const moodBadge = document.getElementById("moodBadge");
+    const moodWrap = document.getElementById("moodBadgeWrap");
+    const moodDropdown = document.getElementById("moodDropdown");
+
+    moodBadge?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const song = this.player.getCurrentSong();
+      if (!song) {
+        this._toast("Play a song first!");
+        return;
+      }
+      // Mark current pin as active in the list
+      const pinned = this.moodPins[song.id];
+      document.querySelectorAll(".mood-drop-item").forEach((item) => {
+        item.classList.toggle("active", item.dataset.mood === (pinned || ""));
+      });
+      moodWrap.classList.toggle("open");
+    });
+
+    document.querySelectorAll(".mood-drop-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const song = this.player.getCurrentSong();
+        if (!song) return;
+        const moodKey = item.dataset.mood; // empty string = auto-detect
+
+        const badge = document.getElementById("moodBadge");
+        if (moodKey) {
+          this.moodPins[song.id] = moodKey;
+          this.mood.assignSongMood(song.id, moodKey);
+          this.mood.pinMood(moodKey);
+          const info = this.mood.getMoodInfo(moodKey);
+          document.getElementById("moodEmoji").textContent = info.emoji;
+          document.getElementById("moodLabel").textContent = info.label;
+          badge.style.borderColor = info.color;
+          badge.style.color = info.color;
+          badge.style.background = info.bg;
+          badge.classList.add("pinned");
+          this._toast(`${info.emoji} Mood set to ${info.label}`);
+        } else {
+          delete this.moodPins[song.id];
+          this.mood.pinMood(null);
+          badge.style.borderColor = "";
+          badge.style.color = "";
+          badge.style.background = "";
+          badge.classList.remove("pinned");
+          this._toast("🔄 Back to auto-detect");
+        }
+        this._saveToStorage();
+        this._updateMoodCounts();
+        moodWrap.classList.remove("open");
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (moodWrap && !moodWrap.contains(e.target)) {
+        moodWrap.classList.remove("open");
+      }
+    });
   }
 
   _setupMoodCallbacks() {
@@ -397,14 +552,49 @@ class UIController {
     const song = this.player.getCurrentSong();
     if (!song) return;
 
-    document.getElementById("songTitle").textContent = song.name;
+    const titleEl = document.getElementById("songTitle");
+    titleEl.classList.remove("scrolling");
+    titleEl.style.removeProperty("--marquee-dist");
+    titleEl.style.removeProperty("--marquee-dur");
+    titleEl.innerHTML = `<span class="song-title-inner">${song.name}</span>`;
+
+    requestAnimationFrame(() => {
+      const inner = titleEl.querySelector(".song-title-inner");
+      if (!inner) return;
+      const overflow = inner.scrollWidth - titleEl.clientWidth;
+      if (overflow > 4) {
+        titleEl.style.setProperty("--marquee-dist", `-${overflow + 20}px`);
+        const dur = Math.max(4, (overflow + 20) / 60);
+        titleEl.style.setProperty("--marquee-dur", `${dur.toFixed(1)}s`);
+        titleEl.classList.add("scrolling");
+      }
+    });
+
     document.getElementById("songArtist").textContent = song.artist;
 
-    // Update heart button
     const loved = this.player.shuffle.isLoved(song.id);
     document.getElementById("heartBtn").classList.toggle("heart-on", loved);
 
-    // Highlight in library
+    // Restore mood pin visual state for this song
+    const badge = document.getElementById("moodBadge");
+    const pin = this.moodPins[song.id];
+    if (pin) {
+      this.mood.pinMood(pin);
+      const info = this.mood.getMoodInfo(pin);
+      document.getElementById("moodEmoji").textContent = info.emoji;
+      document.getElementById("moodLabel").textContent = info.label;
+      badge.style.borderColor = info.color;
+      badge.style.color = info.color;
+      badge.style.background = info.bg;
+      badge.classList.add("pinned");
+    } else {
+      this.mood.pinMood(null);
+      badge.style.borderColor = "";
+      badge.style.color = "";
+      badge.style.background = "";
+      badge.classList.remove("pinned");
+    }
+
     this._updateLibraryHighlight();
     this._updateQueueDisplay();
   }
@@ -786,6 +976,95 @@ class UIController {
     // Reset to default
     document.getElementById("playlistModal").style.display = "block";
     document.getElementById("addToPlaylistModal").style.display = "none";
+  }
+
+  // ===== THEME =====
+  _setAccentVars(r, g, b, accent, accent2) {
+    const root = document.documentElement;
+    root.style.setProperty("--accent", accent);
+    root.style.setProperty("--accent-r", Math.round(r));
+    root.style.setProperty("--accent-g", Math.round(g));
+    root.style.setProperty("--accent-b", Math.round(b));
+    root.style.setProperty("--accent2", accent2);
+  }
+
+  _smoothAccent(toR, toG, toB, toAccent, toAccent2, duration = 900) {
+    // Read current values
+    const style = getComputedStyle(document.documentElement);
+    const fromR = parseFloat(style.getPropertyValue("--accent-r")) || 167;
+    const fromG = parseFloat(style.getPropertyValue("--accent-g")) || 139;
+    const fromB = parseFloat(style.getPropertyValue("--accent-b")) || 250;
+
+    if (this._themeRaf) cancelAnimationFrame(this._themeRaf);
+    const start = performance.now();
+
+    const step = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      // Ease out cubic
+      const e = 1 - Math.pow(1 - t, 3);
+      const r = fromR + (toR - fromR) * e;
+      const g = fromG + (toG - fromG) * e;
+      const b = fromB + (toB - fromB) * e;
+      const hex =
+        "#" +
+        [r, g, b]
+          .map((v) => Math.round(v).toString(16).padStart(2, "0"))
+          .join("");
+      this._setAccentVars(r, g, b, hex, toAccent2);
+      if (t < 1) {
+        this._themeRaf = requestAnimationFrame(step);
+      } else {
+        this._setAccentVars(toR, toG, toB, toAccent, toAccent2);
+        this._themeRaf = null;
+      }
+    };
+    this._themeRaf = requestAnimationFrame(step);
+  }
+
+  _applyTheme(themeKey, animate = true) {
+    const t = this.themePresets[themeKey];
+    if (!t) return;
+    this.currentTheme = themeKey;
+    if (animate) {
+      this._smoothAccent(t.r, t.g, t.b, t.accent, t.accent2);
+    } else {
+      this._setAccentVars(t.r, t.g, t.b, t.accent, t.accent2);
+    }
+    document.querySelectorAll(".theme-preset").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.theme === themeKey);
+    });
+    this._saveToStorage();
+  }
+
+  _applyCustomColor(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const hue =
+      (Math.round(
+        (Math.atan2(Math.sqrt(3) * (g - b), 2 * r - g - b) * 180) / Math.PI,
+      ) +
+        360) %
+      360;
+    const accent2 = `hsl(${(hue + 150) % 360},70%,65%)`;
+    this._smoothAccent(r, g, b, hex, accent2);
+    this.currentTheme = "custom";
+    this._saveToStorage();
+  }
+
+  _startAutoCycle() {
+    this._stopAutoCycle();
+    this._autoCycleTimer = setInterval(() => {
+      this._themeIdx = (this._themeIdx + 1) % this._themeKeys.length;
+      this._applyTheme(this._themeKeys[this._themeIdx]);
+    }, 15000);
+  }
+
+  _stopAutoCycle() {
+    if (this._autoCycleTimer) {
+      clearInterval(this._autoCycleTimer);
+      this._autoCycleTimer = null;
+    }
   }
 
   // ===== TOAST =====

@@ -58,7 +58,90 @@
             </svg>
           </button>
         </div>
+        <!-- Theme button at bottom of sidebar -->
+        <button class="nav-btn theme-btn" id="themeToggleBtn" title="Theme">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
       </nav>
+
+      <!-- Theme Panel -->
+      <div class="theme-panel" id="themePanel">
+        <div class="theme-panel-header">
+          <span>Theme Color</span>
+          <button class="theme-close" id="themePanelClose">✕</button>
+        </div>
+        <div class="theme-presets">
+          <button
+            class="theme-preset active"
+            data-theme="purple"
+            style="--pc: #a78bfa"
+            title="Purple"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="blue"
+            style="--pc: #60a5fa"
+            title="Blue"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="green"
+            style="--pc: #34d399"
+            title="Green"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="orange"
+            style="--pc: #fb923c"
+            title="Orange"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="pink"
+            style="--pc: #f472b6"
+            title="Pink"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="red"
+            style="--pc: #f87171"
+            title="Red"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="cyan"
+            style="--pc: #22d3ee"
+            title="Cyan"
+          ></button>
+          <button
+            class="theme-preset"
+            data-theme="yellow"
+            style="--pc: #fbbf24"
+            title="Yellow"
+          ></button>
+        </div>
+        <div class="theme-custom-row">
+          <label>Custom</label>
+          <input type="color" id="themeColorPicker" value="#a78bfa" />
+        </div>
+        <div class="theme-auto-row">
+          <label>Auto-cycle</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="themeAutoToggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
 
       <!-- Main Views -->
       <main class="main-content">
@@ -84,10 +167,45 @@
 
             <!-- Song Info -->
             <div class="song-info">
-              <div class="mood-badge" id="moodBadge">
-                <span class="mood-emoji" id="moodEmoji">🎵</span>
-                <span class="mood-label" id="moodLabel">Detecting...</span>
+              <!-- Mood badge — click to open mood dropdown -->
+              <div class="mood-badge-wrap" id="moodBadgeWrap">
+                <button
+                  class="mood-badge"
+                  id="moodBadge"
+                  title="Click to set mood"
+                >
+                  <span class="mood-emoji" id="moodEmoji">🎵</span>
+                  <span class="mood-label" id="moodLabel">Detecting...</span>
+                  <svg class="mood-chevron" viewBox="0 0 24 24">
+                    <polyline points="6,9 12,15 18,9" />
+                  </svg>
+                </button>
+                <div class="mood-dropdown" id="moodDropdown">
+                  <div class="mood-dropdown-label">Set mood for this song</div>
+                  <button class="mood-drop-item" data-mood="energetic">
+                    ⚡ Energetic
+                  </button>
+                  <button class="mood-drop-item" data-mood="happy">
+                    😊 Happy
+                  </button>
+                  <button class="mood-drop-item" data-mood="focus">
+                    🎯 Focus
+                  </button>
+                  <button class="mood-drop-item" data-mood="calm">
+                    🌊 Calm
+                  </button>
+                  <button class="mood-drop-item" data-mood="romantic">
+                    💕 Romantic
+                  </button>
+                  <button class="mood-drop-item" data-mood="melancholic">
+                    🌙 Melancholic
+                  </button>
+                  <button class="mood-drop-item mood-drop-auto" data-mood="">
+                    🔄 Auto-detect
+                  </button>
+                </div>
               </div>
+
               <h1 class="song-title" id="songTitle">No Song Playing</h1>
               <p class="song-artist" id="songArtist">
                 Select a folder to begin
@@ -125,7 +243,6 @@
                   </svg>
                   <span>Repeat</span>
                 </button>
-
                 <button class="ctrl-btn" id="heartBtn" title="Favorite">
                   <svg viewBox="0 0 24 24">
                     <path
@@ -377,7 +494,6 @@
 
       <!-- Modals -->
       <div class="modal-overlay" id="modalOverlay">
-        <!-- New Playlist Modal -->
         <div class="modal" id="playlistModal">
           <h3>Create Playlist</h3>
           <input
@@ -396,7 +512,6 @@
             </button>
           </div>
         </div>
-        <!-- Add to Playlist Modal -->
         <div class="modal" id="addToPlaylistModal" style="display: none">
           <h3>Add to Playlist</h3>
           <div id="playlistSelectList" class="playlist-select-list"></div>
@@ -413,6 +528,7 @@
       <audio id="audioPlayer" crossorigin="anonymous"></audio>
     </div>
 
+    <script src="handleHandler.js"></script>
     <script src="helpers.js"></script>
     <script src="smart-shuffle.js"></script>
     <script src="mood-system.js"></script>
@@ -420,6 +536,5 @@
     <script src="visualizer.js"></script>
     <script src="ui-controller.js"></script>
     <script src="app.js"></script>
-    <script src="handleHandler.js"></script>
   </body>
 </html>

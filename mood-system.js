@@ -150,16 +150,20 @@ class MoodSystem {
   }
 
   detectMood(spec) {
+    // If user has manually pinned a mood for current song, honour it
+    if (this._pinnedMood) return this._pinnedMood;
+
     let newMood;
     const e = spec.energy;
     const b = spec.bass;
     const t = spec.treble;
 
-    if (e > 0.55 && b > 0.5) newMood = "energetic";
-    else if (e > 0.45 && t > 0.35) newMood = "happy";
-    else if (e > 0.3 && t > 0.25) newMood = "focus";
-    else if (e > 0.2 && b > 0.15) newMood = "romantic";
-    else if (e > 0.08) newMood = "calm";
+    // Lowered thresholds — typical compressed music energy sits 0.03-0.15
+    if (e > 0.12 && b > 0.1) newMood = "energetic";
+    else if (e > 0.09 && t > 0.07) newMood = "happy";
+    else if (e > 0.06 && t > 0.05) newMood = "focus";
+    else if (e > 0.04 && b > 0.03) newMood = "romantic";
+    else if (e > 0.02) newMood = "calm";
     else newMood = "melancholic";
 
     if (newMood !== this.currentMood) {
@@ -167,6 +171,15 @@ class MoodSystem {
       if (this.onMoodChange) this.onMoodChange(newMood);
     }
     return newMood;
+  }
+
+  /** Pin a mood for the current song so auto-detection won't override it */
+  pinMood(moodKey) {
+    this._pinnedMood = moodKey || null;
+    if (moodKey) {
+      this.currentMood = moodKey;
+      if (this.onMoodChange) this.onMoodChange(moodKey);
+    }
   }
 
   getMoodInfo(moodKey) {
