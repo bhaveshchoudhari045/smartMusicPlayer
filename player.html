@@ -6,78 +6,115 @@
     <title>NOVA Music Player</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div id="app">
-      <!-- Animated background -->
+      <!-- Noise texture overlay -->
+      <div class="noise-overlay"></div>
+
+      <!-- Animated gradient orbs -->
       <div class="bg-orbs">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
       </div>
+
+      <!-- Background canvas for visualizer bg effect -->
       <canvas id="bgCanvas"></canvas>
 
-      <!-- Sidebar Nav -->
+      <!-- ═══════════════════════════════════════
+           SIDEBAR NAV
+      ═══════════════════════════════════════ -->
       <nav class="sidebar">
-        <div class="logo">NOVA</div>
+        <div class="logo">
+          <span class="logo-n">N</span><span class="logo-ova">OVA</span>
+        </div>
+
         <div class="nav-items">
           <button class="nav-btn active" data-view="player" title="Player">
-            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" /></svg>
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" /></svg>
+            </span>
+            <span class="nav-label">Play</span>
           </button>
+
           <button class="nav-btn" data-view="library" title="Library">
-            <svg viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg>
+            </span>
+            <span class="nav-label">Library</span>
           </button>
+
           <button class="nav-btn" data-view="playlists" title="Playlists">
-            <svg viewBox="0 0 24 24">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="15" y2="12" />
-              <line x1="3" y1="18" x2="18" y2="18" />
-              <circle cx="20" cy="16" r="3" />
-            </svg>
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="15" y2="12" />
+                <line x1="3" y1="18" x2="18" y2="18" />
+                <circle cx="20" cy="16" r="3" />
+              </svg>
+            </span>
+            <span class="nav-label">Lists</span>
           </button>
+
           <button class="nav-btn" data-view="insights" title="Insights">
-            <svg viewBox="0 0 24 24">
-              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
-            </svg>
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+              </svg>
+            </span>
+            <span class="nav-label">Stats</span>
           </button>
+
           <button class="nav-btn" data-view="mood" title="Mood">
-            <svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8,14s1.5,2,4,2,4-2,4-2" />
-              <line x1="9" y1="9" x2="9.01" y2="9" />
-              <line x1="15" y1="9" x2="15.01" y2="9" />
-            </svg>
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8,14s1.5,2,4,2,4-2,4-2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
+            </span>
+            <span class="nav-label">Mood</span>
           </button>
         </div>
-        <!-- Theme button at bottom of sidebar -->
-        <button class="nav-btn theme-btn" id="themeToggleBtn" title="Theme">
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-        </button>
+
+        <!-- Theme toggle at bottom -->
+        <div class="sidebar-bottom">
+          <button class="nav-btn theme-btn" id="themeToggleBtn" title="Theme">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="2" x2="12" y2="4" />
+                <line x1="12" y1="20" x2="12" y2="22" />
+                <line x1="4.93" y1="4.93" x2="6.34" y2="6.34" />
+                <line x1="17.66" y1="17.66" x2="19.07" y2="19.07" />
+                <line x1="2" y1="12" x2="4" y2="12" />
+                <line x1="20" y1="12" x2="22" y2="12" />
+                <line x1="4.93" y1="19.07" x2="6.34" y2="17.66" />
+                <line x1="17.66" y1="6.34" x2="19.07" y2="4.93" />
+              </svg>
+            </span>
+            <span class="nav-label">Theme</span>
+          </button>
+        </div>
       </nav>
 
-      <!-- Theme Panel -->
+      <!-- ═══════════════════════════════════════
+           THEME PANEL
+      ═══════════════════════════════════════ -->
       <div class="theme-panel" id="themePanel">
         <div class="theme-panel-header">
-          <span>Theme Color</span>
+          <span>Accent Color</span>
           <button class="theme-close" id="themePanelClose">✕</button>
         </div>
         <div class="theme-presets">
@@ -143,21 +180,39 @@
         </div>
       </div>
 
-      <!-- Main Views -->
+      <!-- ═══════════════════════════════════════
+           MAIN CONTENT
+      ═══════════════════════════════════════ -->
       <main class="main-content">
-        <!-- ===== PLAYER VIEW ===== -->
+        <!-- ╔══════════════════════╗
+             ║    PLAYER VIEW       ║
+             ╚══════════════════════╝ -->
         <section class="view active" id="view-player">
           <div class="player-layout">
-            <!-- Visualizer + Album Art -->
+            <!-- Left: Visual zone -->
             <div class="viz-zone">
               <canvas id="visualizer"></canvas>
-              <div class="album-art" id="albumArt">
-                <div class="album-default">
-                  <div class="vinyl">
-                    <div class="vinyl-inner"></div>
+
+              <!-- Decorative blur behind art -->
+              <div class="art-glow-blob" id="artGlowBlob"></div>
+
+              <!-- Vinyl + Album Art -->
+              <div class="art-stack">
+                <div class="vinyl-disc">
+                  <div class="vinyl-grooves"></div>
+                  <div class="vinyl-label"></div>
+                </div>
+
+                <div class="album-art" id="albumArt">
+                  <div class="album-default">
+                    <div class="vinyl">
+                      <div class="vinyl-inner"></div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Beat pulse rings -->
               <div class="beat-rings" id="beatRings">
                 <div class="ring r1"></div>
                 <div class="ring r2"></div>
@@ -165,9 +220,9 @@
               </div>
             </div>
 
-            <!-- Song Info -->
+            <!-- Right top: Song Info -->
             <div class="song-info">
-              <!-- Mood badge — click to open mood dropdown -->
+              <!-- Mood badge -->
               <div class="mood-badge-wrap" id="moodBadgeWrap">
                 <button
                   class="mood-badge"
@@ -212,7 +267,7 @@
               </p>
               <p class="song-album" id="songAlbum"></p>
 
-              <!-- Waveform Progress -->
+              <!-- Waveform progress bar -->
               <div class="progress-wrap" id="progressWrap">
                 <canvas id="waveformCanvas" class="waveform-canvas"></canvas>
                 <div class="progress-time">
@@ -222,8 +277,9 @@
               </div>
             </div>
 
-            <!-- Controls -->
+            <!-- Right bottom: Controls -->
             <div class="controls-zone">
+              <!-- Secondary controls -->
               <div class="control-row secondary">
                 <button class="ctrl-btn" id="shuffleBtn" title="Smart Shuffle">
                   <svg viewBox="0 0 24 24">
@@ -264,6 +320,7 @@
                 </button>
               </div>
 
+              <!-- Main playback controls -->
               <div class="control-row main">
                 <button class="ctrl-btn-main" id="prevBtn">
                   <svg viewBox="0 0 24 24">
@@ -271,6 +328,7 @@
                     <line x1="5" y1="19" x2="5" y2="5" />
                   </svg>
                 </button>
+
                 <button class="ctrl-btn-play" id="playBtn">
                   <div class="play-icon" id="playIcon">
                     <svg class="icon-play" viewBox="0 0 24 24">
@@ -287,6 +345,7 @@
                   </div>
                   <div class="play-ripple"></div>
                 </button>
+
                 <button class="ctrl-btn-main" id="nextBtn">
                   <svg viewBox="0 0 24 24">
                     <polygon points="5,4 15,12 5,20" />
@@ -295,7 +354,7 @@
                 </button>
               </div>
 
-              <!-- Volume -->
+              <!-- Volume control -->
               <div class="volume-row">
                 <svg viewBox="0 0 24 24" class="vol-icon">
                   <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
@@ -314,23 +373,31 @@
                   />
                   <div class="vol-fill" id="volFill" style="width: 75%"></div>
                 </div>
-                <span id="volValue">75</span>
+                <span id="volValue" class="vol-value">75</span>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ===== LIBRARY VIEW ===== -->
+        <!-- ╔══════════════════════╗
+             ║    LIBRARY VIEW      ║
+             ╚══════════════════════╝ -->
         <section class="view" id="view-library">
           <div class="view-header">
             <h2>Library</h2>
             <div class="header-actions">
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="Search songs..."
-                class="search-input"
-              />
+              <div class="search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  id="searchInput"
+                  placeholder="Search songs, artists..."
+                  class="search-input"
+                />
+              </div>
               <button class="action-btn primary" id="selectFolderBtn">
                 <svg viewBox="0 0 24 24">
                   <path
@@ -341,6 +408,7 @@
               </button>
             </div>
           </div>
+
           <div class="sort-bar">
             <button class="sort-btn active" data-sort="default">Default</button>
             <button class="sort-btn" data-sort="title">Title</button>
@@ -348,15 +416,21 @@
             <button class="sort-btn" data-sort="plays">Most Played</button>
             <button class="sort-btn" data-sort="loved">Loved</button>
           </div>
+
           <div id="songList" class="song-list">
             <div class="empty-state">
               <div class="empty-icon">🎵</div>
-              <p>No songs loaded. Select a folder!</p>
+              <p>
+                No songs loaded yet.<br />Hit <strong>Load Folder</strong> to
+                get started.
+              </p>
             </div>
           </div>
         </section>
 
-        <!-- ===== PLAYLISTS VIEW ===== -->
+        <!-- ╔══════════════════════╗
+             ║   PLAYLISTS VIEW     ║
+             ╚══════════════════════╝ -->
         <section class="view" id="view-playlists">
           <div class="view-header">
             <h2>Playlists</h2>
@@ -371,14 +445,19 @@
           <div id="playlistGrid" class="playlist-grid">
             <div class="empty-state">
               <div class="empty-icon">🎼</div>
-              <p>No playlists yet. Create one!</p>
+              <p>No playlists yet.<br />Create one to get started.</p>
             </div>
           </div>
         </section>
 
-        <!-- ===== INSIGHTS VIEW ===== -->
+        <!-- ╔══════════════════════╗
+             ║   INSIGHTS VIEW      ║
+             ╚══════════════════════╝ -->
         <section class="view" id="view-insights">
-          <div class="view-header"><h2>Your Listening Insights</h2></div>
+          <div class="view-header">
+            <h2>Insights</h2>
+          </div>
+
           <div class="insights-grid">
             <div class="insight-card card-featured">
               <div class="card-label">🏆 All-Time Favorite</div>
@@ -401,6 +480,7 @@
               </div>
             </div>
           </div>
+
           <div class="insights-lists">
             <div class="insight-list-section">
               <h3>🎯 Top 5 Most Played</h3>
@@ -415,15 +495,23 @@
               <div id="lovedList" class="insight-list"></div>
             </div>
           </div>
+
           <div class="mood-history-section">
-            <h3>🌈 Mood History (last 10 sessions)</h3>
+            <h3>
+              🌈 Mood History <span class="section-sub">last 10 sessions</span>
+            </h3>
             <div id="moodHistory" class="mood-history"></div>
           </div>
         </section>
 
-        <!-- ===== MOOD VIEW ===== -->
+        <!-- ╔══════════════════════╗
+             ║     MOOD VIEW        ║
+             ╚══════════════════════╝ -->
         <section class="view" id="view-mood">
-          <div class="view-header"><h2>Mood Player</h2></div>
+          <div class="view-header">
+            <h2>Mood Player</h2>
+          </div>
+
           <div class="mood-grid">
             <button class="mood-card" data-mood="energetic">
               <div class="mood-card-emoji">⚡</div>
@@ -462,6 +550,7 @@
               </div>
             </button>
           </div>
+
           <div
             id="moodSongList"
             class="song-list"
@@ -469,14 +558,18 @@
           >
             <div class="mood-filter-header">
               <span id="activeMoodLabel"></span>
-              <button class="action-btn" id="playMoodBtn">Play All</button>
+              <button class="action-btn primary" id="playMoodBtn">
+                ▶ Play All
+              </button>
             </div>
             <div id="moodFilteredSongs"></div>
           </div>
         </section>
       </main>
 
-      <!-- Queue Sidebar -->
+      <!-- ═══════════════════════════════════════
+           QUEUE SIDEBAR
+      ═══════════════════════════════════════ -->
       <aside class="queue-sidebar" id="queueSidebar">
         <div class="queue-header">
           <h3>Up Next</h3>
@@ -484,6 +577,7 @@
         </div>
         <div id="queueList" class="queue-list"></div>
       </aside>
+
       <button class="queue-toggle" id="queueToggle" title="Queue">
         <svg viewBox="0 0 24 24">
           <line x1="3" y1="6" x2="21" y2="6" />
@@ -492,7 +586,9 @@
         </svg>
       </button>
 
-      <!-- Modals -->
+      <!-- ═══════════════════════════════════════
+           MODALS
+      ═══════════════════════════════════════ -->
       <div class="modal-overlay" id="modalOverlay">
         <div class="modal" id="playlistModal">
           <h3>Create Playlist</h3>
@@ -512,6 +608,7 @@
             </button>
           </div>
         </div>
+
         <div class="modal" id="addToPlaylistModal" style="display: none">
           <h3>Add to Playlist</h3>
           <div id="playlistSelectList" class="playlist-select-list"></div>
@@ -524,7 +621,7 @@
       <!-- Toast notifications -->
       <div id="toastContainer" class="toast-container"></div>
 
-      <!-- Hidden audio -->
+      <!-- Hidden audio element -->
       <audio id="audioPlayer" crossorigin="anonymous"></audio>
     </div>
 
